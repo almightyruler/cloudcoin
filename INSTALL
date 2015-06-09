@@ -1,0 +1,9 @@
+Building cloudcoin
+
+See doc/readme-qt.rst for instructions on building cloudcoin QT,
+the intended-for-end-users, nice-graphical-interface, reference
+implementation of cloudcoin.
+
+See doc/build-*.txt for instructions on building cloudcoind,
+the intended-for-services, no-graphical-interface, reference
+implementation of cloudcoin.
