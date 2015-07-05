@@ -165,8 +165,6 @@ public:
     int64 nLastRecv;
     int64 nLastSendEmpty;
     int64 nTimeConnected;
-    int64 nAverageHeightCount;   /* CDC v1.3.3 */
-    int64 nAverageHeightCumTotal; /* CDC v1.3.3 */
     int nHeaderStart;
     unsigned int nMessageStart;
     CAddress addr;
@@ -218,8 +216,6 @@ public:
         hSocket = hSocketIn;
         nLastSend = 0;
         nLastRecv = 0;
-        nAverageHeightCount = 0;  /* CDC v1.3.3 */
-        nAverageHeightCumTotal = 0;  /* CDC v.1.3.3 */
         nLastSendEmpty = GetTime();
         nTimeConnected = GetTime();
         nHeaderStart = -1;
