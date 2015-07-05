@@ -3021,6 +3021,11 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         // ppcoin: ask for pending sync-checkpoint if any
         if (!IsInitialBlockDownload())
             Checkpoints::AskForPendingSyncCheckpoint(pfrom);
+
+        // CDC v1.3.3: reset counts to detect forked peers
+        pfrom->nAverageHeightCount = 0;
+        pfrom->nAverageHeightCumTotal = 0;
+
     }
 
 
@@ -3242,6 +3247,28 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             pindex = pindex->pnext;
         int nLimit = 500;
         printf("getblocks %d to %s limit %d from %s\n", (pindex ? pindex->nHeight : -1), hashStop.ToString().substr(0,20).c_str(), nLimit, pfrom->addr.ToString().c_str());
+
+
+        // CDC v1.3.3: calculate long term average value of the block height that the peer is requesting. if this doesn't change much over the long term (sync height stays close to starting height) assume 
+        //                peer is forked, and ban it.
+
+        pfrom->nAverageHeightCount++;
+        pfrom->nAverageHeightCumTotal += (pindex ? pindex->nHeight : pfrom->nStartingHeight);    // add requested height to cumulative total. if invalid, use peer's starting height
+        int CalcAverageHeight = pfrom->nAverageHeightCumTotal / pfrom->nAverageHeightCount;
+
+printf("peer %s nAverageHeightCount=%"PRI64d" ThisHeightRequest=%d AverageHeightRequest=%d startingheight=%d\n", pfrom->addr.ToString().c_str(), pfrom->nAverageHeightCount, (pindex ? pindex->nHeight : -1),
+    CalcAverageHeight, pfrom->nStartingHeight);
+
+        if (pfrom->nAverageHeightCount > 100) {   // only check once peer has done a large number of "getblocks" requests this session
+            pfrom->nAverageHeightCount = 0;
+            pfrom->nAverageHeightCumTotal = 0;  // reset counts
+
+            if (CalcAverageHeight < (pfrom->nStartingHeight + 100)) {  // if after 100 getblocks requests average height request is below starting height plus 100, ban peer
+              pfrom->Misbehaving(100);
+              return error("peer %s: sync not advancing after 100 getblocks requests; startingheight=%d averageheightrequest=%d", pfrom->addr.ToString().c_str(), pfrom->nStartingHeight, CalcAverageHeight);
+            }
+        }
+
         for (; pindex; pindex = pindex->pnext)
         {
             if (pindex->GetBlockHash() == hashStop)
