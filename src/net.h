@@ -165,6 +165,9 @@ public:
     int64 nLastRecv;
     int64 nLastSendEmpty;
     int64 nTimeConnected;
+    int nHighestHeightRequested;  /* CDC v1.3.3 */
+    int nHeightBackwards;  /* CDC v1.3.3 */
+    int64 nHeightBackwardsLast;  /* CDC v1.3.3 */
     int nHeaderStart;
     unsigned int nMessageStart;
     CAddress addr;
@@ -216,6 +219,9 @@ public:
         hSocket = hSocketIn;
         nLastSend = 0;
         nLastRecv = 0;
+        nHighestHeightRequested = 0;  /* CDC v1.3.3 */
+        nHeightBackwards = 0;  /* CDC v1.3.3 */
+        nHeightBackwardsLast = GetTime();  /* CDC v1.3.3 */
         nLastSendEmpty = GetTime();
         nTimeConnected = GetTime();
         nHeaderStart = -1;
